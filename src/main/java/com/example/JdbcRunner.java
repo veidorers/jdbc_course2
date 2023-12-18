@@ -6,11 +6,7 @@ import com.example.entity.Ticket;
 
 import java.math.BigDecimal;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import static java.util.stream.Collectors.joining;
+import java.util.Optional;
 
 public class JdbcRunner {
     public static void main(String[] args) throws SQLException {
@@ -19,6 +15,13 @@ public class JdbcRunner {
 //        findAllTest();
 //        findByIdTest();
 //        updateTest();
+//        findAllWithFilterTest();
+        var ticketDao = TicketDao.getInstance();
+        var ticket = ticketDao.findById(5L);
+        ticket.ifPresent(System.out::println);
+    }
+
+    private static void findAllWithFilterTest() {
         var filter = new TicketFilter(3, 0, null, null, null, null, null);
         var ticketDao = TicketDao.getInstance();
         var tickets = ticketDao.findAll(filter);
@@ -54,7 +57,7 @@ public class JdbcRunner {
         var ticket = new Ticket();
         ticket.setPassengerNo("1234765");
         ticket.setPassengerName("TEST2");
-        ticket.setFlightId(3L);
+//        ticket.setFlightId(3L);
         ticket.setCost(BigDecimal.valueOf(105.00));
         ticket.setSeatNo("F7");
 
