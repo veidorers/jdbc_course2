@@ -1,35 +1,64 @@
 package com.example;
 
-import com.example.util.ConnectionManager;
+import com.example.dao.TicketDao;
+import com.example.dto.TicketFilter;
+import com.example.entity.Ticket;
 
+import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
+
+import static java.util.stream.Collectors.joining;
 
 public class JdbcRunner {
     public static void main(String[] args) throws SQLException {
-        var resultTickets = findTicketsByFlightId(1L);
-        System.out.println(resultTickets);
-        ConnectionManager.closePool();
+//        saveTest();
+//        deleteTest();
+//        findAllTest();
+//        findByIdTest();
+//        updateTest();
+        var filter = new TicketFilter(3, 0, null, null, null, null, null);
+        var ticketDao = TicketDao.getInstance();
+        var tickets = ticketDao.findAll(filter);
+        System.out.println(tickets);
     }
 
-    private static List<Long> findTicketsByFlightId(Long id) throws SQLException {
-        String sql = """
-                SELECT id 
-                FROM ticket
-                WHERE flight_id = ?
-                """;
-        List<Long> result = new ArrayList<>();
-        try (var connection = ConnectionManager.get();
-             var preparedStatement = connection.prepareStatement(sql)) {
-            preparedStatement.setLong(1, id);
+    private static void updateTest() {
+        var ticketDao = TicketDao.getInstance();
+        var maybeTicket = ticketDao.findById(2L);
+        maybeTicket.ifPresent(ticket -> {
+            ticket.setCost(BigDecimal.valueOf(188.99));
+            ticketDao.update(ticket);
+        });
+    }
 
-            var resultSet = preparedStatement.executeQuery();
-            while (resultSet.next()) {
-                 result.add(resultSet.getLong("id"));
-            }
+    private static void findByIdTest() {
+        var ticketDao = TicketDao.getInstance();
+        System.out.println(ticketDao.findById(2L));
+    }
 
-            return result;
-        }
+
+    private static void findAllTest() {
+        var ticketDao = TicketDao.getInstance();
+        ticketDao.findAll().forEach(System.out::println);
+    }
+
+    private static void deleteTest() {
+        var ticketDao = TicketDao.getInstance();
+        System.out.println(ticketDao.delete(1L));
+    }
+
+    private static void saveTest() {
+        var ticket = new Ticket();
+        ticket.setPassengerNo("1234765");
+        ticket.setPassengerName("TEST2");
+        ticket.setFlightId(3L);
+        ticket.setCost(BigDecimal.valueOf(105.00));
+        ticket.setSeatNo("F7");
+
+        var ticketDao = TicketDao.getInstance();
+        System.out.println(ticketDao.save(ticket));
     }
 }
