@@ -14,8 +14,9 @@ import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.joining;
 
-public class TicketDao {
+public class TicketDao implements Dao<Long, Ticket> {
     private static final TicketDao INSTANCE = new TicketDao();
+    private static final FlightDao flightDao = FlightDao.getInstance();
     private static final String DELETE_SQL = """
             DELETE FROM ticket
             WHERE id = ?
@@ -26,25 +27,16 @@ public class TicketDao {
             (?, ?, ?, ?, ?)
             """;
     private static final String FIND_ALL_SQL = """
-            SELECT t.id,
+            SELECT id,
                 passenger_no,
                 passenger_name,
                 flight_id,
                 seat_no,
-                cost,
-                f.id, 
-                f.flight_no,
-                f.departure_date,
-                f.departure_airport_code,
-                f.arrival_date,
-                f.arrival_airport_code,
-                f.aircraft_id,
-                f.status
-            FROM ticket t
-            JOIN flight f on t.flight_id = f.id
+                cost
+            FROM ticket
             """;
     private static final String FIND_BY_ID_SQL = FIND_ALL_SQL + """
-            WHERE t.id = ?
+            WHERE id = ?
             """;
 
     private static final String UPDATE_SQL = """
@@ -199,22 +191,13 @@ public class TicketDao {
     }
 
     private Ticket buildTicket(ResultSet resultSet) throws SQLException {
-        var flight = new Flight(
-                resultSet.getLong("flight_id"),
-                resultSet.getString("flight_no"),
-                resultSet.getTimestamp("departure_date").toLocalDateTime(),
-                resultSet.getString("departure_airport_code"),
-                resultSet.getTimestamp("arrival_date").toLocalDateTime(),
-                resultSet.getString("arrival_airport_code"),
-                resultSet.getInt("aircraft_id"),
-                Flight.Status.valueOf(resultSet.getString("status"))
-        );
+
 
         return new Ticket(
                 resultSet.getLong("id"),
                 resultSet.getString("passenger_no"),
                 resultSet.getString("passenger_name"),
-                flight,
+                flightDao.findById(resultSet.getLong("flight_id")).orElse(null),
                 resultSet.getString("seat_no"),
                 resultSet.getBigDecimal("cost")
         );
